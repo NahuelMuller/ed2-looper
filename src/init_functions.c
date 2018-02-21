@@ -54,3 +54,60 @@ void tecs_init(void){		// Inicializacion de TEC_1, TEC_2, TEC_3 y TEC_4
 	LPC_GPIO_PIN_INT->IENR |= 0x0F;	// Rising edge interrupt enable (GPIO pin interrupt 0,1,2,3)
 
 }
+
+void adc0_init(void){				// Inicializacion del ADC0
+
+	// SCU: Analog function select register (ENAIO0)
+	LPC_SCU->ENAIO[0] |= (1 << 3);	// Digital function selected on pin P7_5
+
+	// SCU: Set Pin Function and Mode
+	LPC_SCU->SFSP[7][5] |= SCU_MODE_INACT;	// Disable pull-down and pull-up on pin P7_5
+
+	// A/D Control register
+	LPC_ADC0->CR |= (1 << 3) |		// Select ADC0 channel
+									(231 << 8) |	// ADC0 clkdiv => Freq = 204MHz / (11 * (clkdiv + 1))
+									(1 << 16) |		// Burst mode => Repeated conversions
+									(0 << 17) |		// 10 bits resolution
+									(1 << 21) |		// Power on
+									(0 << 24) |		// Conversion start => Burst controlled (not software)
+									(0 << 27) ;		// Start signal edge => Burst => Not significant bit
+
+	// A/D Interrupt Enable register
+	LPC_ADC0->INTEN &= ~((0xFF << 0) |	// Channel interrupts (8) disabled
+											(1 << 8)) ;			// Global interrupt disabled
+
+	// NVIC: Interrupt Set Enable Registers and Interrupt Clear Enable Registers
+	NVIC->ICER[0] |= (0x01 << 17);	// Disable external interrupt #17 (ADC0)
+
+}
+
+void dac_init(void){		// Inicializacion del DAC
+
+	// SCU: Analog function select register (ENAIO2)
+	LPC_SCU->ENAIO[2] |= (1 << 0);	// Analog function DAC selected on pin P4_4
+
+	// SCU: Set Pin Function and Mode
+	LPC_SCU->SFSP[4][4] |= SCU_MODE_INACT;	// Disable pull-down and pull-up on pin P4_4
+
+	// D/A Converter register
+	LPC_DAC->CR |= (1 << 16);	// Maximum update rate of 400 kHz
+
+	// D/A Control register
+	LPC_DAC->CTRL |=	(1 << 1) |	// Enable double-buffering
+										(1 << 2) |	// Time-out counter operation is enabled
+										(1 << 3);		// Enable DAC and enable DMA Burst Request Input 15
+
+	// D/A Converter counter value register
+	LPC_DAC->CNTVAL |= (2552 & 0xFFFF);	// 16-bit reload value for the DAC interrupt/DMA timer => (11 * (clkdiv + 1))
+
+}
+
+void dma_init(void){	// Inicializacion del DMA
+
+	// DMA Configuration Register
+	LPC_GPDMA->CONFIG |= (1 << 0);  // DMA Controller enabled
+
+}
+
+
+/**/
