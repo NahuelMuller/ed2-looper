@@ -1,0 +1,12 @@
+# Directory content
+bin/*
+obj/*
+
+# Log file
+*.log
+
+# Assembly file
+main.s
+
+# Exceptions
+!*/.gitkeep
