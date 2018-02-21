@@ -6,13 +6,19 @@
 
 /*------ LIBRARIES ------*/
 #include  "main.h"
+#include  "Prueba_printf.h"
 
 /*------ VARIABLES ------*/
-LLI_T   DAC_LLI0, DAC_LLI1,
+static char aux[256];         // Debugging (usada por printf)
+LLI_T   DAC_LLI0, DAC_LLI1,   // LLIs DMA
         ADC_LLI0, ADC_LLI1;
 
 /*------ MAIN ------*/
 int main(void){
+
+  UART_Init();
+  sprintf_mio(aux, "Inicio del programa\r\n");
+  DEBUGSTR(aux);
 
   // Configuracion inicial de perifericos varios
   leds_init();
