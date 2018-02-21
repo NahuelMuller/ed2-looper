@@ -102,7 +102,12 @@ void dac_init(void){		// Inicializacion del DAC
 
 }
 
+void dma_dac_init(void){	// Inicializacion del DMA
 
+	// DMA Configuration Register
+	LPC_GPDMA->CONFIG |= (1 << 0);  // DMA Controller enabled
+
+}
 
 
 /**/

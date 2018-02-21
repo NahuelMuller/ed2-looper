@@ -7,18 +7,31 @@
 /*------ LIBRARIES ------*/
 #include  "main.h"
 
+/*------ VARIABLES ------*/
+LLI_T   DAC_LLI0, DAC_LLI1,
+        ADC_LLI0, ADC_LLI1;
+
 /*------ MAIN ------*/
 int main(void){
 
   // Configuracion inicial de perifericos varios
   leds_init();
   tecs_init();
-  adc0_init();
   dac_init();
+  adc0_init();
+  dma_init();
 
-  while (1){
+  // Configuracion del canal del DMA usado por el DAC
+
+
+  // Configuracion del canal del DMA usado por el ADC
+
+
+  while (1){  // Manejo de flags
   }
-  return 0;
+
+  return 0;   // En teoria nunca llega hasta aca (--teoria--)
+
 }
 
 /*------ INTERRUPTS ------*/
