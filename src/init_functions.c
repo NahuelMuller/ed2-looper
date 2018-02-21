@@ -54,3 +54,36 @@ void tecs_init(void){		// Inicializacion de TEC_1, TEC_2, TEC_3 y TEC_4
 	LPC_GPIO_PIN_INT->IENR |= 0x0F;	// Rising edge interrupt enable (GPIO pin interrupt 0,1,2,3)
 
 }
+
+void adc0_init(void){				// Inicializacion del ADC0
+
+	// SCU: Analog function select register (ENAIO2)
+	LPC_SCU->ENAIO[0] |= (1 << 3);	// Digital function selected on pin P7_5
+
+	// SCU: Set Pin Function and Mode
+	LPC_SCU->SFSP[7][5] |= SCU_MODE_INACT;	// Disable pull-down and pull-up on pin P7_5
+
+	// A/D Control register
+	LPC_ADC0->CR |= (1 << 3) |		// Select ADC0 channel
+									(231 << 8) |	// ADC0 clkdiv => Freq = 204MHz / (11 * (clkdiv + 1))
+									(1 << 16) |		// Burst mode => Repeated conversions
+									(0 << 17) |		// 10 bits resolution
+									(1 << 21) |		// Power on
+									(0 << 24) |		// Conversion start => Burst controlled (not software)
+									(0 << 27) ;		// Start signal edge => Burst => Not significant bit
+
+	// A/D Interrupt Enable register
+	LPC_ADC0->INTEN &= ~((0xFF << 0) |	// Channel interrupts (8) disabled
+											(1 << 8)) ;			// Global interrupt disabled
+
+	// NVIC: Interrupt Set Enable Registers and Interrupt Clear Enable Registers
+	NVIC->ICER[0] |= (0x01 << 17);	// Disable external interrupt #17 (ADC0)
+
+}
+
+
+
+
+
+
+/**/

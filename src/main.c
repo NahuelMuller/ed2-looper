@@ -12,6 +12,7 @@ int main(void){
 
   leds_init();
   tecs_init();
+  adc0_init();
 
   while (1){
   }
