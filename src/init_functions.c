@@ -57,7 +57,7 @@ void tecs_init(void){		// Inicializacion de TEC_1, TEC_2, TEC_3 y TEC_4
 
 void adc0_init(void){				// Inicializacion del ADC0
 
-	// SCU: Analog function select register (ENAIO2)
+	// SCU: Analog function select register (ENAIO0)
 	LPC_SCU->ENAIO[0] |= (1 << 3);	// Digital function selected on pin P7_5
 
 	// SCU: Set Pin Function and Mode
@@ -81,7 +81,26 @@ void adc0_init(void){				// Inicializacion del ADC0
 
 }
 
+void dac_init(void){		// Inicializacion del DAC
 
+	// SCU: Analog function select register (ENAIO2)
+	LPC_SCU->ENAIO[2] |= (1 << 0);	// Analog function DAC selected on pin P4_4
+
+	// SCU: Set Pin Function and Mode
+	LPC_SCU->SFSP[4][4] |= SCU_MODE_INACT;	// Disable pull-down and pull-up on pin P4_4
+
+	// D/A Converter register
+	LPC_DAC->CR |= (1 << 16);	// Maximum update rate of 400 kHz
+
+	// D/A Control register
+	LPC_DAC->CTRL |=	(1 << 1) |	// Enable double-buffering
+										(1 << 2) |	// Time-out counter operation is enabled
+										(1 << 3);		// Enable DAC and enable DMA Burst Request Input 15
+
+	// D/A Converter counter value register
+	LPC_DAC->CNTVAL |= (2552 & 0xFFFF);	// 16-bit reload value for the DAC interrupt/DMA timer => (11 * (clkdiv + 1))
+
+}
 
 
 

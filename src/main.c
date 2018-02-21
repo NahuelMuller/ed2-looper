@@ -10,9 +10,11 @@
 /*------ MAIN ------*/
 int main(void){
 
+  // Configuracion inicial de perifericos varios
   leds_init();
   tecs_init();
   adc0_init();
+  dac_init();
 
   while (1){
   }

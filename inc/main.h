@@ -7,3 +7,4 @@
 void leds_init(void);
 void tecs_init(void);
 void adc0_init(void);
+void dac_init(void);
