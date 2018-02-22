@@ -73,11 +73,11 @@ void adc0_init(void){				// Inicializacion del ADC0
 									(0 << 27) ;		// Start signal edge => Burst => Not significant bit
 
 	// A/D Interrupt Enable register
-	LPC_ADC0->INTEN &= ~((0xFF << 0) |	// Channel interrupts (8) disabled
-											(1 << 8)) ;			// Global interrupt disabled
+	LPC_ADC0->INTEN = (1 << 3) |	// Channel 3 interrupt enabled
+										(0 << 8) ;	// Global interrupt disabled			(HE AQUI LA CAUSA DE TODO EL TIEMPO PERDIDO)
 
 	// NVIC: Interrupt Set Enable Registers and Interrupt Clear Enable Registers
-	NVIC->ICER[0] |= (0x01 << 17);	// Disable external interrupt #17 (ADC0)
+	NVIC->ICER[0] |= (1 << 17);	// Disable external interrupt #17 (ADC0)
 
 }
 
@@ -107,7 +107,12 @@ void dma_init(void){	// Inicializacion del DMA
 	// DMA Configuration Register
 	LPC_GPDMA->CONFIG |= (1 << 0);  // DMA Controller enabled
 
+	// NVIC: Interrupt Set Enable Registers and Interrupt Clear Enable Registers
+	NVIC->ISER[0] |= (1 << 2);	// Enable external interrupt #2 (DMA)
+
 }
 
 
-/**/
+
+
+/*------ END ------*/
