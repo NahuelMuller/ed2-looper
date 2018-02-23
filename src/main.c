@@ -9,7 +9,8 @@
 #include  "Prueba_printf.h"
 
 /*------ DEFINITIONS ------*/
-#define   SAMPLES   100
+#define   SAMPLES   100         // Cantidad de muestras por buffer
+#define   BLOQUES   10          // Cantidad de bloques de memoria
 
 /*------ VARIABLES ------*/
 static char   aux[256];             // Debugging (usada por printf)
@@ -20,14 +21,21 @@ LLI_T         DAC_LLI0, DAC_LLI1,   // LLIs DMA
 unsigned int  DAC_BUF0[SAMPLES], DAC_BUF1[SAMPLES],   // Buffers DAC y ADC
               ADC_BUF0[SAMPLES], ADC_BUF1[SAMPLES];
 
-unsigned int  buffer[SAMPLES];    // Buffer intermedio
+unsigned int  buffer[SAMPLES];            // Buffer intermedio
+unsigned int  memory[BLOQUES][SAMPLES];   // Memoria de grabacion
 
 bool          REQ_DAC = 0,        // Flag indicador request DMA del DAC
               DAC_LLI0_ATR = 0,   // Flag DAC_LLI0 activo
               REQ_ADC = 0,        // Flag indicador request DMA del ADC
-              ADC_LLI0_ATR = 0;   // Flag ADC_LLI0 activo
+              ADC_LLI0_ATR = 0,   // Flag ADC_LLI0 activo
+              RECORDING = 0,      // Flag indicador de grabacion
+              ERASE_MEM = 1;      // Flag indicador de borrado de memoria
 
-unsigned int  i;                  // Auxiliar
+unsigned int  mem_block_adc = 0,    // Contador barrido grabacion memoria
+              mem_block_dac = 0;    // Contador barrido lectura memoria
+              // mem_block_dac = BLOQUES / 2;  // PROBAR ESTE DESFASAJE
+
+unsigned int  i, j, k;    // Auxiliares
 
 /*------ MAIN ------*/
 int main(void){
@@ -108,7 +116,9 @@ int main(void){
   dma_init();
 
   while (1){  // Manejo de flags
+
     if (REQ_DAC){         // Hubo un request del DAC
+
       REQ_DAC = 0;
       if (DAC_LLI0_ATR){        // DAC_LLI0 en uso
         for (i = 0; i < SAMPLES; i++){
@@ -119,18 +129,54 @@ int main(void){
           DAC_BUF0[i] = buffer[i];
         }
       }
+
     } else if (REQ_ADC){  // Hubo un request del ADC
+
       REQ_ADC = 0;
-      if (ADC_LLI0_ATR){        // ADC_LLI0 en uso
-        for (i = 0; i < SAMPLES; i++){
-          buffer[i] = ADC_BUF1[i];
+      if (RECORDING){     // Hay que grabar
+
+        if (ADC_LLI0_ATR){        // ADC_LLI0 en uso
+          for (i = 0; i < SAMPLES; i++){
+            buffer[i] = ADC_BUF1[i];
+            buffer[i] = memory[mem_block_adc][i];
+          }
+        } else {                  // ADC_LLI1 en uso
+          for (i = 0; i < SAMPLES; i++){
+            buffer[i] = ADC_BUF0[i];
+            buffer[i] = memory[mem_block_adc][i];
+          }
         }
-      } else {                  // ADC_LLI1 en uso
-        for (i = 0; i < SAMPLES; i++){
-          buffer[i] = ADC_BUF0[i];
+        mem_block_adc++;
+        if (mem_block_adc == BLOQUES){    // Termino de grabar
+          mem_block_adc = 0;
+          RECORDING = 0;
+        }
+
+      } else {
+
+        if (ADC_LLI0_ATR){        // ADC_LLI0 en uso
+          for (i = 0; i < SAMPLES; i++){
+            buffer[i] = ADC_BUF1[i];
+          }
+        } else {                  // ADC_LLI1 en uso
+          for (i = 0; i < SAMPLES; i++){
+            buffer[i] = ADC_BUF0[i];
+          }
+        }
+
+      }
+
+    }
+
+    if (ERASE_MEM) {          // Borrado de memoria
+      ERASE_MEM = 0;
+      for (i = 0; i < BLOQUES; i++){
+        for (j = 0; j < SAMPLES; j++){
+          memory[i][j] = 0;
         }
       }
     }
+
   }
 
   return 0;   // En teoria nunca llega hasta aca (--teoria--)
@@ -161,9 +207,18 @@ void DMA_IRQHandler(){    // Interrupcion del DMA
 }
 
 void GPIO0_IRQHandler(){  // Interrupcion asignada a TEC_1
+
+  // Setear flag de grabacion
+  RECORDING = 1;
+
   LPC_GPIO_PIN_INT->IST |= (0x01 << 0); // Clear Interrupt
+
 }
 void GPIO1_IRQHandler(){  // Interrupcion asignada a TEC_2
+
+  // Setear flag de borrado
+  ERASE_MEM = 1;
+
   LPC_GPIO_PIN_INT->IST |= (0x01 << 1);	// Clear Interrupt
 }
 void GPIO2_IRQHandler(){  // Interrupcion asignada a TEC_3
