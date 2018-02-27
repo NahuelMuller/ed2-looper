@@ -153,6 +153,7 @@ int main(void){
         if (mem_block_adc == BLOQUES){    // Termino de grabar
           mem_block_adc = 0;
           RECORDING = 0;
+          LPC_GPIO_PORT->CLR[5] |= 0x07;
         }
 
       } else {
@@ -214,6 +215,9 @@ void GPIO0_IRQHandler(){  // Interrupcion asignada a TEC_1
   // Setear flag de grabacion
   RECORDING = 1;
 
+  // Indication led
+  LPC_GPIO_PORT->SET[5] |= 0x07;
+
   LPC_GPIO_PIN_INT->IST |= (0x01 << 0); // Clear Interrupt
 
 }
@@ -223,6 +227,7 @@ void GPIO1_IRQHandler(){  // Interrupcion asignada a TEC_2
   ERASE_MEM = 1;
 
   LPC_GPIO_PIN_INT->IST |= (0x01 << 1);	// Clear Interrupt
+
 }
 void GPIO2_IRQHandler(){  // Interrupcion asignada a TEC_3
   LPC_GPIO_PIN_INT->IST |= (0x01 << 2);	// Clear Interrupt
