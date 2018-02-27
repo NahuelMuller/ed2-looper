@@ -10,7 +10,7 @@
 
 /*------ DEFINITIONS ------*/
 #define   SAMPLES   100         // Cantidad de muestras por buffer
-#define   BLOQUES   10          // Cantidad de bloques de memoria
+#define   BLOQUES   50          // Cantidad de bloques de memoria
 
 /*------ VARIABLES ------*/
 static char   aux[256];             // Debugging (usada por printf)
@@ -33,9 +33,8 @@ bool          REQ_DAC = 0,        // Flag indicador request DMA del DAC
 
 unsigned int  mem_block_adc = 0,    // Contador barrido grabacion memoria
               mem_block_dac = 0;    // Contador barrido lectura memoria
-              // mem_block_dac = BLOQUES / 2;  // PROBAR ESTE DESFASAJE
 
-unsigned int  i, j, k;    // Auxiliares
+unsigned int  i, j;    // Auxiliares
 
 /*------ MAIN ------*/
 int main(void){
@@ -122,12 +121,16 @@ int main(void){
       REQ_DAC = 0;
       if (DAC_LLI0_ATR){        // DAC_LLI0 en uso
         for (i = 0; i < SAMPLES; i++){
-          DAC_BUF1[i] = buffer[i];
+          DAC_BUF1[i] = buffer[i] + memory[mem_block_dac][i];
         }
       } else {                  // DAC_LLI1 en uso
         for (i = 0; i < SAMPLES; i++){
-          DAC_BUF0[i] = buffer[i];
+          DAC_BUF0[i] = buffer[i] + memory[mem_block_dac][i];
         }
+      }
+      mem_block_dac++;
+      if (mem_block_dac == BLOQUES){
+        mem_block_dac = 0;
       }
 
     } else if (REQ_ADC){  // Hubo un request del ADC
@@ -138,12 +141,12 @@ int main(void){
         if (ADC_LLI0_ATR){        // ADC_LLI0 en uso
           for (i = 0; i < SAMPLES; i++){
             buffer[i] = ADC_BUF1[i];
-            buffer[i] = memory[mem_block_adc][i];
+            memory[mem_block_adc][i] += ADC_BUF1[i];
           }
         } else {                  // ADC_LLI1 en uso
           for (i = 0; i < SAMPLES; i++){
             buffer[i] = ADC_BUF0[i];
-            buffer[i] = memory[mem_block_adc][i];
+            memory[mem_block_adc][i] += ADC_BUF0[i];
           }
         }
         mem_block_adc++;
